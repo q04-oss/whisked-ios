@@ -1,0 +1,19 @@
+# Xcode
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcworkspace/xcshareddata/
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Secrets — never committed
+Secrets.xcconfig
+
+# SPM
+.build/
+.swiftpm/
+
+# macOS
+.DS_Store
