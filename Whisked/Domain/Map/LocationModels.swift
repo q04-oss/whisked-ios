@@ -1,3 +1,13 @@
+// LocationModels defines the types that represent physical Whisked presence on the map.
+//
+// A location can be a permanent bar, a temporary popup, or a wholesale client
+// stocking Whisked product. All three appear as bell pins on the map. The menu
+// is attached to the location rather than being global so that popup-specific
+// offerings (e.g. a collab item at a hair salon event) can differ from the bar.
+//
+// The Jasper Ave bar is seeded locally so the map is populated immediately on
+// launch without a network call. Popups and wholesale clients are fetched from
+// the backend when LocationStore.refresh() is called.
 import CoreLocation
 import Foundation
 
@@ -35,7 +45,7 @@ struct MenuItem: Identifiable, Hashable {
     let type:  MenuItemType
 }
 
-enum MenuItemType {
+enum MenuItemType: CaseIterable {
     case matcha, hojicha, retail
 }
 

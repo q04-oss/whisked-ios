@@ -1,3 +1,12 @@
+// WhiskedMapView renders the full-screen MapKit map that sits beneath the sheet.
+//
+// It owns the camera position (starting centred on Jasper Ave, Edmonton) and
+// reads locations from LocationStore to place bell pins. When a pin is selected,
+// the selection is written back to LocationStore — SheetContainerView observes
+// this change and tells SheetRouter to navigate to the location detail route.
+//
+// The map style excludes points of interest so Whisked pins are the only
+// notable markers on the map. User location is shown when permission is granted.
 import MapKit
 import SwiftUI
 

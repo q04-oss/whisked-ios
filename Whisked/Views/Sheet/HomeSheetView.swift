@@ -1,7 +1,12 @@
+// HomeSheetView is the default content of the sheet when no specific route is active.
+//
+// It shows two things: a loyalty nudge for authenticated customers (progress toward
+// the next free drink) and the list of Whisked locations. Tapping a location
+// delegates to SheetRouter via the onLocationTap callback — this view does not
+// navigate directly, keeping routing responsibility in one place.
 import SwiftUI
 
-/// Default sheet content — list of locations.
-/// Tapping a location expands the sheet and shows detail.
+/// Default sheet content — location list with optional loyalty nudge.
 struct HomeSheetView: View {
     @Environment(LocationStore.self) private var locations
     @Environment(LoyaltyStore.self)  private var loyalty

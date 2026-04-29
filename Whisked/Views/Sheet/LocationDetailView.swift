@@ -1,3 +1,8 @@
+// LocationDetailView shows a single Whisked location: address, a tap-to-directions
+// button that opens Apple Maps, and the full menu grouped by category.
+//
+// Opened when the user taps a map pin or a location row in HomeSheetView.
+// Dismissed via the × button which returns SheetRouter to .home.
 import MapKit
 import SwiftUI
 
@@ -129,4 +134,3 @@ private struct MenuSection: View {
     }
 }
 
-extension MenuItemType: CaseIterable {}

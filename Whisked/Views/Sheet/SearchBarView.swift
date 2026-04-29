@@ -1,7 +1,16 @@
+// SearchBarView is the persistent header of the sheet — always visible regardless
+// of which detent the sheet is at.
+//
+// It presents as a bell mark + text field + profile button, matching the Maps app
+// layout. Submission is split into two callbacks:
+//   - onCommand  — input that starts with "/" is a navigation command (see SheetCommand)
+//   - onSearch   — all other input goes to the brand chat (Claude, future)
+//   - onProfileTap — the person icon directly navigates to the profile route
+//
+// This view owns no state beyond the query string. All routing is delegated upward.
 import SwiftUI
 
 /// The command bar at the top of the persistent sheet.
-/// Regular text → brand chat (future Claude integration).
 /// Text starting with "/" → command routing.
 struct SearchBarView: View {
     @Binding var query: String

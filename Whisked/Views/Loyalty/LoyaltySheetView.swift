@@ -1,3 +1,12 @@
+// LoyaltySheetView is the loyalty programme screen, presented inside the sheet.
+//
+// It shows the steep progress ring, the current balance, a stamp button (with
+// confirmation dialog), a redeem button when rewards are available, and a
+// truncated recent history list. Full history is available via the history
+// endpoint but showing the last 5 events is sufficient for this surface.
+//
+// Stamp and redeem operations go through LoyaltyStore which handles idempotency
+// keys and error state. This view only drives confirmations and celebrations.
 import SwiftUI
 
 struct LoyaltySheetView: View {

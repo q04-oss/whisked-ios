@@ -1,3 +1,15 @@
+// ProfileSheetView serves two distinct audiences from the same route:
+//
+//   Authenticated — shows the customer's name, email, loyalty stats, and sign-out.
+//   Unauthenticated — shows an inline login form.
+//
+// This dual behaviour is intentional: the profile route is the only entry point
+// for auth in the app. There is no separate login screen — the map is always
+// visible and auth happens inside the sheet. The unauthenticated state presents
+// a minimal form rather than a full-screen takeover.
+//
+// The /business command (SheetCommand) also routes here, giving staff a discreet
+// path to the dashboard login without any admin chrome on the public-facing app.
 import SwiftUI
 
 struct ProfileSheetView: View {
