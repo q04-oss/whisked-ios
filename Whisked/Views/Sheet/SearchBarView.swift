@@ -1,32 +1,25 @@
-// SearchBarView is the persistent header of the sheet — always visible regardless
-// of which detent the sheet is at.
+// SearchBarView is always visible at the top of the sheet regardless of detent.
+// It is the primary surface through which the user speaks to Whisked —
+// both as a brand (search, questions) and as a command interface (/business).
 //
-// It presents as a bell mark + text field + profile button, matching the Maps app
-// layout. Submission is split into two callbacks:
-//   - onCommand  — input that starts with "/" is a navigation command (see SheetCommand)
-//   - onSearch   — all other input goes to the brand chat (Claude, future)
-//   - onProfileTap — the person icon directly navigates to the profile route
-//
-// This view owns no state beyond the query string. All routing is delegated upward.
+// The bell mark is intentionally small and left-aligned — it identifies the
+// brand without competing with the input field. The profile button is the
+// only other element. Nothing else belongs here.
 import SwiftUI
 
-/// The command bar at the top of the persistent sheet.
-/// Text starting with "/" → command routing.
 struct SearchBarView: View {
     @Binding var query: String
-    let onCommand:  (String) -> Void
-    let onSearch:   (String) -> Void
+    let onCommand:    (String) -> Void
+    let onSearch:     (String) -> Void
     let onProfileTap: () -> Void
 
     @FocusState private var focused: Bool
 
     var body: some View {
-        HStack(spacing: 10) {
-            // Bell mark — brand identifier
-            Image(systemName: "bell.fill")
-                .font(.system(size: 16, weight: .semibold))
+        HStack(spacing: 12) {
+            Image(systemName: "bell")
+                .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(Color.whisked.amber)
-                .frame(width: 28)
 
             TextField("Whisked", text: $query)
                 .font(.system(size: 16))
@@ -37,44 +30,30 @@ struct SearchBarView: View {
                 .tint(Color.whisked.amber)
 
             if !query.isEmpty {
-                Button {
-                    query = ""
-                    focused = false
-                } label: {
+                Button { query = ""; focused = false } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(Color.whisked.stone)
+                        .foregroundStyle(Color.whisked.stone.opacity(0.5))
+                        .font(.system(size: 14))
                 }
-                .transition(.opacity.combined(with: .scale))
+                .transition(.opacity)
             }
 
-            Divider()
-                .frame(height: 20)
-
-            // Profile button
             Button(action: onProfileTap) {
                 Image(systemName: "person.circle")
                     .font(.system(size: 22))
-                    .foregroundStyle(Color.whisked.amber)
+                    .foregroundStyle(Color.whisked.stone)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(Color.whisked.cream, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.whisked.beige, lineWidth: 1)
-        )
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
         .animation(.easeInOut(duration: 0.15), value: query.isEmpty)
     }
 
     private func submit() {
-        let trimmed = query.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return }
-        if trimmed.hasPrefix("/") {
-            onCommand(trimmed)
-        } else {
-            onSearch(trimmed)
-        }
+        let input = query.trimmingCharacters(in: .whitespaces)
+        guard !input.isEmpty else { return }
+        input.hasPrefix("/") ? onCommand(input) : onSearch(input)
         focused = false
     }
 }

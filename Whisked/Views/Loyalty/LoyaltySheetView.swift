@@ -1,12 +1,8 @@
-// LoyaltySheetView is the loyalty programme screen, presented inside the sheet.
+// LoyaltySheetView is the steep passport — the record of the customer's practice.
 //
-// It shows the steep progress ring, the current balance, a stamp button (with
-// confirmation dialog), a redeem button when rewards are available, and a
-// truncated recent history list. Full history is available via the history
-// endpoint but showing the last 5 events is sufficient for this surface.
-//
-// Stamp and redeem operations go through LoyaltyStore which handles idempotency
-// keys and error state. This view only drives confirmations and celebrations.
+// The number is the experience. Everything else is context. No history list,
+// no secondary stats, no decorative cards. The stamp action and the redeem
+// action when available. That is all.
 import SwiftUI
 
 struct LoyaltySheetView: View {
@@ -15,105 +11,95 @@ struct LoyaltySheetView: View {
 
     @State private var showStampConfirm  = false
     @State private var showRedeemConfirm = false
-    @State private var showCelebration   = false
+    @State private var showStampConfirmation = false
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: 0) {
 
-                // ── Header ─────────────────────────────────────────────────
+                // ── Dismiss ───────────────────────────────────────────────
                 HStack {
-                    Text("Steeps")
-                        .font(.title2.bold())
-                        .foregroundStyle(Color.whisked.ink)
                     Spacer()
                     Button(action: onDismiss) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(Color.whisked.beige)
-                            .symbolRenderingMode(.hierarchical)
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color.whisked.stone)
+                            .padding(8)
+                            .background(Color.whisked.stone.opacity(0.08), in: Circle())
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
+                .padding(.horizontal, 32)
+                .padding(.top, 20)
 
                 if let balance = loyalty.balance {
-                    // ── Progress ───────────────────────────────────────────
-                    VStack(spacing: 12) {
-                        SteepProgressView(progress: balance.progress, total: 9)
-                            .frame(width: 160, height: 160)
 
-                        VStack(spacing: 4) {
-                            Text("\(balance.steepsEarned)")
-                                .font(.system(size: 42, weight: .bold, design: .rounded))
-                                .foregroundStyle(Color.whisked.ink)
-                            Text(balance.steepsEarned == 1 ? "steep" : "steeps")
-                                .font(.subheadline)
-                                .foregroundStyle(Color.whisked.stone)
-                        }
+                    // ── Ring ──────────────────────────────────────────────
+                    SteepProgressView(progress: balance.progress, total: 9)
+                        .frame(width: 140, height: 140)
+                        .padding(.top, 32)
 
+                    // ── Count ─────────────────────────────────────────────
+                    VStack(spacing: 6) {
+                        Text("\(balance.steepsEarned)")
+                            .font(.system(size: 52, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color.whisked.ink)
+
+                        Text(balance.steepsEarned == 1 ? "steep" : "steeps")
+                            .font(.footnote)
+                            .foregroundStyle(Color.whisked.stone)
+                            .tracking(1.5)
+                            .textCase(.uppercase)
+                    }
+                    .padding(.top, 24)
+
+                    // ── Status ────────────────────────────────────────────
+                    Group {
                         if balance.available > 0 {
-                            Text(balance.available == 1 ? "1 free drink ready" : "\(balance.available) free drinks ready")
-                                .font(.footnote.weight(.semibold))
+                            Text(balance.available == 1 ? "One free drink ready" : "\(balance.available) free drinks ready")
                                 .foregroundStyle(Color.whisked.amber)
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 6)
-                                .background(Color.whisked.yellow.opacity(0.35), in: Capsule())
                         } else {
-                            Text("\(balance.until) more \(balance.until == 1 ? "steep" : "steeps") until your next free drink")
-                                .font(.footnote)
+                            Text("\(balance.until) until next")
                                 .foregroundStyle(Color.whisked.stone)
                         }
                     }
+                    .font(.footnote)
+                    .padding(.top, 12)
 
-                    // ── Actions ────────────────────────────────────────────
-                    VStack(spacing: 10) {
-                        PrimaryButton(title: "Stamp my steep", isLoading: loyalty.isStamping) {
+                    // ── Actions ───────────────────────────────────────────
+                    VStack(spacing: 14) {
+                        PrimaryButton(title: "Stamp", isLoading: loyalty.isStamping) {
                             showStampConfirm = true
                         }
 
                         if balance.available > 0 {
                             Button("Redeem free drink") { showRedeemConfirm = true }
-                                .font(.subheadline)
-                                .foregroundStyle(Color.whisked.amber)
-                        }
-                    }
-                    .padding(.horizontal, 16)
-
-                    // ── History ────────────────────────────────────────────
-                    if !loyalty.history.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Recent")
-                                .font(.footnote.weight(.semibold))
+                                .font(.footnote)
                                 .foregroundStyle(Color.whisked.stone)
-                                .padding(.horizontal, 16)
-
-                            VStack(spacing: 0) {
-                                ForEach(loyalty.history.prefix(5)) { event in
-                                    EventRow(event: event)
-                                    if event.id != loyalty.history.prefix(5).last?.id {
-                                        Divider().padding(.leading, 16)
-                                    }
-                                }
-                            }
-                            .background(Color.whisked.beige, in: RoundedRectangle(cornerRadius: 12))
-                            .padding(.horizontal, 16)
                         }
                     }
+                    .padding(.horizontal, 32)
+                    .padding(.top, 40)
 
                 } else if loyalty.isLoading {
-                    ProgressView().padding(.top, 32)
+                    ProgressView()
+                        .padding(.top, 80)
+                        .tint(Color.whisked.stone)
                 }
 
-                Spacer(minLength: 32)
+                Spacer(minLength: 40)
             }
         }
         .scrollIndicators(.hidden)
+        .overlay(alignment: .center) {
+            if showStampConfirmation {
+                StampConfirmation { showStampConfirmation = false }
+            }
+        }
         .confirmationDialog("Stamp a steep?", isPresented: $showStampConfirm, titleVisibility: .visible) {
             Button("Stamp") {
                 Task {
                     await loyalty.stamp()
-                    if loyalty.error == nil { showCelebration = true }
+                    if loyalty.error == nil { showStampConfirmation = true }
                 }
             }
             Button("Cancel", role: .cancel) { }
@@ -126,35 +112,5 @@ struct LoyaltySheetView: View {
         } message: {
             Text("Show this to a barista when you order.")
         }
-        .overlay {
-            if showCelebration {
-                CelebrationOverlay { showCelebration = false }
-            }
-        }
-    }
-}
-
-private struct EventRow: View {
-    let event: LoyaltyEvent
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: event.isEarn ? "bell.fill" : "gift.fill")
-                .foregroundStyle(event.isEarn ? Color.whisked.amber : Color.whisked.stone)
-                .frame(width: 28)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(event.displayTitle)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.whisked.ink)
-                Text(event.sourceLabel)
-                    .font(.caption)
-                    .foregroundStyle(Color.whisked.stone)
-            }
-            Spacer()
-            Text(event.createdAt, style: .date)
-                .font(.caption)
-                .foregroundStyle(Color.whisked.stone.opacity(0.7))
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 11)
     }
 }

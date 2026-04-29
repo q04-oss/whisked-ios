@@ -1,125 +1,50 @@
-// HomeSheetView is the default content of the sheet when no specific route is active.
-//
-// It shows two things: a loyalty nudge for authenticated customers (progress toward
-// the next free drink) and the list of Whisked locations. Tapping a location
-// delegates to SheetRouter via the onLocationTap callback — this view does not
-// navigate directly, keeping routing responsibility in one place.
+// HomeSheetView is what the user sees when they first expand the sheet.
+// It is a list of locations and nothing else. The loyalty programme is
+// accessed through the profile or by stamping after a visit — it does not
+// need to announce itself here. Presence on the map is the communication.
 import SwiftUI
 
-/// Default sheet content — location list with optional loyalty nudge.
 struct HomeSheetView: View {
     @Environment(LocationStore.self) private var locations
-    @Environment(LoyaltyStore.self)  private var loyalty
-    @Environment(AuthStore.self)     private var auth
 
     let onLocationTap: (WhiskedLocation) -> Void
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(locations.locations) { location in
+                    LocationRow(location: location)
+                        .contentShape(Rectangle())
+                        .onTapGesture { onLocationTap(location) }
 
-                // ── Loyalty nudge (authenticated) ──────────────────────────
-                if auth.isAuthenticated, let balance = loyalty.balance {
-                    LoyaltyNudgeView(balance: balance)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
-                }
-
-                // ── Locations ──────────────────────────────────────────────
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Locations")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.whisked.stone)
-                        .padding(.horizontal, 16)
-
-                    ForEach(locations.locations) { location in
-                        LocationRow(location: location)
-                            .contentShape(Rectangle())
-                            .onTapGesture { onLocationTap(location) }
+                    if location.id != locations.locations.last?.id {
+                        Divider()
+                            .padding(.leading, 32)
                     }
                 }
-                .padding(.top, auth.isAuthenticated ? 0 : 16)
             }
+            .padding(.top, 8)
             .padding(.bottom, 32)
         }
         .scrollIndicators(.hidden)
     }
 }
 
-// MARK: - Loyalty nudge
-
-private struct LoyaltyNudgeView: View {
-    let balance: LoyaltyBalance
-
-    var body: some View {
-        HStack(spacing: 12) {
-            SteepProgressView(progress: balance.progress, total: 9)
-                .frame(width: 44, height: 44)
-
-            VStack(alignment: .leading, spacing: 2) {
-                if balance.available > 0 {
-                    Text("Free drink ready")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.whisked.ink)
-                    Text("Show this at the bar to redeem")
-                        .font(.caption)
-                        .foregroundStyle(Color.whisked.stone)
-                } else {
-                    Text("\(balance.progress) of 9 steeps")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.whisked.ink)
-                    Text("\(balance.until) more until your next free drink")
-                        .font(.caption)
-                        .foregroundStyle(Color.whisked.stone)
-                }
-            }
-            Spacer()
-        }
-        .padding(14)
-        .background(Color.whisked.beige, in: RoundedRectangle(cornerRadius: 14))
-    }
-}
-
-// MARK: - Location row
-
 private struct LocationRow: View {
     let location: WhiskedLocation
 
     var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(Color.whisked.yellow.opacity(0.4))
-                    .frame(width: 40, height: 40)
-                Image(systemName: "bell.fill")
-                    .font(.system(size: 16))
-                    .foregroundStyle(Color.whisked.amber)
-            }
+        VStack(alignment: .leading, spacing: 3) {
+            Text(location.name)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color.whisked.ink)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(location.name)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.whisked.ink)
-                Text(location.address)
-                    .font(.caption)
-                    .foregroundStyle(Color.whisked.stone)
-                    .lineLimit(1)
-            }
-
-            Spacer()
-
-            Text(location.type.label)
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(Color.whisked.amber)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.whisked.yellow.opacity(0.3), in: Capsule())
-
-            Image(systemName: "chevron.right")
-                .font(.caption)
+            Text(location.address)
+                .font(.footnote)
                 .foregroundStyle(Color.whisked.stone)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 32)
+        .padding(.vertical, 16)
     }
 }

@@ -20,16 +20,14 @@ struct RootView: View {
         }
         .environment(router)
         .sheet(isPresented: .constant(true)) {
-            NavigationStack {
-                SheetContainerView()
-            }
-            .presentationDetents([.height(88), .medium, .large], selection: $router.detent)
-            .presentationDragIndicator(.visible)
-            .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-            .interactiveDismissDisabled()
-            .presentationCornerRadius(20)
-            .presentationBackground(Color.whisked.cream)
-            .environment(router)
+            SheetContainerView()
+                .presentationDetents([.height(88), .medium, .large], selection: $router.detent)
+                .presentationDragIndicator(.visible)
+                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+                .interactiveDismissDisabled()
+                .presentationCornerRadius(20)
+                .presentationBackground(.regularMaterial)
+                .environment(router)
         }
         .task { await auth.bootstrap() }
     }

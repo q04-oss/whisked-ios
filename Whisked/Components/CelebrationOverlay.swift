@@ -1,47 +1,34 @@
+// StampConfirmation is the feedback shown after a steep is recorded.
+//
+// A modal overlay with text is too loud for this brand — the confirmation
+// is a brief bell mark that appears centered in the sheet, fades out, and
+// triggers a haptic. The steep count update in LoyaltySheetView is the
+// real confirmation. This is the feeling, not the information.
 import SwiftUI
 
-/// Shown after a successful stamp. Auto-dismisses after 2 seconds.
-struct CelebrationOverlay: View {
+struct StampConfirmation: View {
     let onDismiss: () -> Void
 
     @State private var opacity: Double = 0
-    @State private var scale:   Double = 0.8
+    @State private var scale:   Double = 0.7
 
     var body: some View {
-        ZStack {
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture { dismiss() }
-
-            VStack(spacing: 16) {
-                Image(systemName: "leaf.fill")
-                    .font(.system(size: 56))
-                    .foregroundStyle(.accent)
-
-                Text("Steep earned!")
-                    .font(.title2.bold())
-
-                Text("Your matcha journey continues.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(32)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
-            .padding(32)
+        Image(systemName: "bell.fill")
+            .font(.system(size: 40, weight: .light))
+            .foregroundStyle(Color.whisked.amber)
             .scaleEffect(scale)
-        }
-        .opacity(opacity)
-        .onAppear {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                opacity = 1
-                scale   = 1
+            .opacity(opacity)
+            .onAppear {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                    opacity = 1
+                    scale   = 1
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                    withAnimation(.easeOut(duration: 0.4)) { opacity = 0 }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { onDismiss() }
+                }
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { dismiss() }
-        }
-    }
-
-    private func dismiss() {
-        withAnimation(.easeOut(duration: 0.2)) { opacity = 0 }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { onDismiss() }
+            .allowsHitTesting(false)
     }
 }
