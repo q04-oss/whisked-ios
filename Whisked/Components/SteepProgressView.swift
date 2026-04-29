@@ -26,24 +26,22 @@ struct SteepProgressView: View {
                     let filled = index < progress
 
                     Circle()
-                        .fill(filled ? Color.accentColor : Color(.systemFill))
+                        .fill(filled ? Color.whisked.amber : Color.whisked.beige)
                         .frame(width: dotSize(size: size), height: dotSize(size: size))
                         .overlay {
                             if filled {
                                 Circle()
-                                    .stroke(Color.accentColor.opacity(0.3), lineWidth: 1)
+                                    .stroke(Color.whisked.amber.opacity(0.3), lineWidth: 1)
                             }
                         }
                         .position(x: x, y: y)
                         .animation(.spring(response: 0.4, dampingFraction: 0.7).delay(Double(index) * 0.04), value: progress)
                 }
 
-                // Center label
-                VStack(spacing: 2) {
-                    Image(systemName: "leaf.fill")
-                        .font(.title2)
-                        .foregroundStyle(progress > 0 ? .accent : Color(.tertiaryLabel))
-                }
+                // Center bell mark
+                Image(systemName: "bell.fill")
+                    .font(.title2)
+                    .foregroundStyle(progress > 0 ? Color.whisked.amber : Color.whisked.beige)
             }
             .frame(width: size, height: size)
         }
