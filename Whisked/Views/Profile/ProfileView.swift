@@ -37,6 +37,25 @@ struct ProfileView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    LabeledContent("Network") {
+                        Text("Maison Fraise")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                if auth.profile?.verified == false {
+                    Section {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label("Verify your email", systemImage: "envelope.badge")
+                                .font(.subheadline.weight(.medium))
+                            Text("Check your inbox to verify your account and unlock steeps across the Maison Fraise network.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                    } header: {
+                        Text("Action required")
+                    }
                 }
 
                 Section {

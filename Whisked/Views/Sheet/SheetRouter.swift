@@ -46,8 +46,7 @@ enum SheetRoute: Equatable {
     case home
     case location(WhiskedLocation)
     case loyalty
-    case qrCode   // customer's stamp QR — shown to staff after buying a drink
-    case shop     // Shopify product catalog
+    case qrCode   // customer's stamp QR — shown to staff at the bar
     case profile
 }
 

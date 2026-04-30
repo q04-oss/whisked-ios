@@ -48,10 +48,7 @@ struct SheetContainerView: View {
     private var sheetContent: some View {
         switch router.route {
         case .home:
-            HomeSheetView(
-                onLocationTap: { router.navigate(to: .location($0)) },
-                onShopTap:     { router.navigate(to: .shop) }
-            )
+            HomeSheetView(onLocationTap: { router.navigate(to: .location($0)) })
         case .location(let location):
             LocationDetailView(location: location) { router.navigate(to: .home) }
         case .loyalty:
@@ -61,8 +58,6 @@ struct SheetContainerView: View {
             )
         case .qrCode:
             LoyaltyQRView { router.navigate(to: .loyalty) }
-        case .shop:
-            ShopView { router.navigate(to: .home) }
         case .profile:
             ProfileSheetView { router.navigate(to: .home) }
         }
