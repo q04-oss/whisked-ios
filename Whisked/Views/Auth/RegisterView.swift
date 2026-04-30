@@ -17,7 +17,7 @@ struct RegisterView: View {
                 VStack(spacing: 8) {
                     Text("Join Whisked")
                         .font(.largeTitle.bold())
-                    Text("Your account works across the Maison Fraise network")
+                    Text("Your account works across the box fraise network")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -60,7 +60,7 @@ struct RegisterView: View {
                     await submit()
                 }
 
-                Text("By creating an account you agree to our terms and join the Maison Fraise network.")
+                Text("By creating an account you agree to our terms and join the box fraise network.")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)

@@ -38,7 +38,7 @@ struct ProfileView: View {
                         }
                     }
                     LabeledContent("Network") {
-                        Text("Maison Fraise")
+                        Text("box fraise")
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -48,7 +48,7 @@ struct ProfileView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Label("Verify your email", systemImage: "envelope.badge")
                                 .font(.subheadline.weight(.medium))
-                            Text("Check your inbox to verify your account and unlock steeps across the Maison Fraise network.")
+                            Text("Check your inbox to verify your account and unlock steeps across the box fraise network.")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
