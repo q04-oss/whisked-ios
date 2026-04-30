@@ -8,6 +8,7 @@ import SwiftUI
 struct LoyaltySheetView: View {
     @Environment(LoyaltyStore.self) private var loyalty
     let onDismiss: () -> Void
+    var onShowQR: (() -> Void)? = nil
 
     @State private var showStampConfirm  = false
     @State private var showRedeemConfirm = false
@@ -67,8 +68,16 @@ struct LoyaltySheetView: View {
 
                     // ── Actions ───────────────────────────────────────────
                     VStack(spacing: 14) {
-                        PrimaryButton(title: "Stamp", isLoading: loyalty.isStamping) {
-                            showStampConfirm = true
+                        // QR code — shown to staff after buying a drink.
+                        // Replaces the self-stamp button for validated loyalty.
+                        if let onShowQR {
+                            PrimaryButton(title: "Show stamp code") {
+                                onShowQR()
+                            }
+                        } else {
+                            PrimaryButton(title: "Stamp", isLoading: loyalty.isStamping) {
+                                showStampConfirm = true
+                            }
                         }
 
                         if balance.available > 0 {

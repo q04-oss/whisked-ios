@@ -8,6 +8,7 @@ struct HomeSheetView: View {
     @Environment(LocationStore.self) private var locations
 
     let onLocationTap: (WhiskedLocation) -> Void
+    var onShopTap:     (() -> Void)?
 
     var body: some View {
         ScrollView {
@@ -17,9 +18,23 @@ struct HomeSheetView: View {
                         .contentShape(Rectangle())
                         .onTapGesture { onLocationTap(location) }
 
-                    if location.id != locations.locations.last?.id {
-                        Divider()
-                            .padding(.leading, 32)
+                    Divider().padding(.leading, 32)
+                }
+
+                // Shop entry — quiet, last in the list.
+                if let onShopTap {
+                    Button(action: onShopTap) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Shop")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(Color.whisked.ink)
+                            Text("Ceremonial matcha, delivered")
+                                .font(.footnote)
+                                .foregroundStyle(Color.whisked.stone)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 16)
                     }
                 }
             }

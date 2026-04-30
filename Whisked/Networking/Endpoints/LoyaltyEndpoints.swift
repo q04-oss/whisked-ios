@@ -31,4 +31,8 @@ extension Endpoint {
     static var redeem: Endpoint {
         Endpoint(method: .post, path: "/v1/loyalty/redeem", body: Data("{}".utf8))
     }
+
+    static var qrToken: Endpoint {
+        Endpoint(method: .get, path: "/v1/loyalty/qr-token")
+    }
 }

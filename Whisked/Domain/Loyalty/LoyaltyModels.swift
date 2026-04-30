@@ -1,5 +1,23 @@
 import Foundation
 
+// StampToken is the short-lived token displayed as a QR code.
+// Staff scan the QR code with their phone camera — it opens a URL
+// on the backend that validates the token and records the steep.
+struct StampToken: Decodable {
+    let token:     String
+    let expiresIn: Int  // seconds until the token expires
+
+    enum CodingKeys: String, CodingKey {
+        case token
+        case expiresIn = "expires_in"
+    }
+
+    /// The full URL encoded in the QR code, pointing to the staff stamp page.
+    func stampURL(baseURL: URL) -> URL {
+        baseURL.appending(path: "/stamp").appending(queryItems: [URLQueryItem(name: "t", value: token)])
+    }
+}
+
 struct LoyaltyBalance: Decodable, Equatable {
     let customerID:      Int
     let steepsEarned:    Int
