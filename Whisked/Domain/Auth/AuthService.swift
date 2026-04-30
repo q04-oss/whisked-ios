@@ -36,6 +36,16 @@ struct AuthService {
         try await api.request(try .registerPushToken(token))
     }
 
+    func requestMagicLink(email: String) async throws {
+        try await api.request(try .requestMagicLink(email: email))
+    }
+
+    func verifyMagicLink(token: String) async throws -> AuthResponse {
+        let resp = try await api.request(try .verifyMagicLink(token: token), as: AuthResponse.self)
+        try persist(resp.token)
+        return resp
+    }
+
     var hasStoredTokens: Bool {
         (try? Keychain.loadProtected(key: Keychain.Key.accessToken)) != nil
     }

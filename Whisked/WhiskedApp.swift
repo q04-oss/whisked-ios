@@ -28,6 +28,14 @@ struct WhiskedApp: App {
                 .onReceive(NotificationCenter.default.publisher(for: .loyaltyDidUpdate)) { _ in
                     Task { await loyaltyStore.refreshBalance() }
                 }
+                .onOpenURL { url in
+                    guard url.scheme == "whisked",
+                          url.host == "auth",
+                          let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
+                          let token = items.first(where: { $0.name == "token" })?.value
+                    else { return }
+                    Task { await authStore.verifyMagicLink(token: token) }
+                }
         }
     }
 }

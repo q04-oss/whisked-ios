@@ -28,4 +28,24 @@ extension Endpoint {
     static var logout: Endpoint {
         Endpoint(method: .post, path: "/api/auth/logout")
     }
+
+    static func requestMagicLink(email: String) throws -> Endpoint {
+        struct Body: Encodable { let email: String }
+        return Endpoint(
+            method: .post,
+            path: "/api/auth/magic-link",
+            body: try JSONEncoder().encode(Body(email: email)),
+            requiresAuth: false
+        )
+    }
+
+    static func verifyMagicLink(token: String) throws -> Endpoint {
+        struct Body: Encodable { let token: String }
+        return Endpoint(
+            method: .post,
+            path: "/api/auth/magic-link/verify",
+            body: try JSONEncoder().encode(Body(token: token)),
+            requiresAuth: false
+        )
+    }
 }

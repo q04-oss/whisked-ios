@@ -12,6 +12,7 @@ final class AuthStore {
     enum State: Equatable {
         case checking        // startup — determining if tokens exist
         case unauthenticated
+        case awaitingMagicLink(email: String)
         case authenticated(CustomerProfile)
     }
 
@@ -96,9 +97,31 @@ final class AuthStore {
         }
     }
 
+    func requestMagicLink(email: String) async {
+        await perform {
+            try await self.service.requestMagicLink(email: email)
+            self.state = .awaitingMagicLink(email: email)
+        }
+    }
+
+    func verifyMagicLink(token: String) async {
+        await perform {
+            let resp    = try await self.service.verifyMagicLink(token: token)
+            let profile = try await self.service.fetchProfile()
+            self.state  = .authenticated(profile)
+            self.flushPushToken()
+            _ = resp
+        }
+    }
+
     func logout() async {
         await service.logout()
         state = .unauthenticated
+    }
+
+    func resetAuth() {
+        state = .unauthenticated
+        error = nil
     }
 
     // MARK: - Helpers
