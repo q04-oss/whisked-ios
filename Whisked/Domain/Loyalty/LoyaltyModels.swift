@@ -65,9 +65,13 @@ struct LoyaltyEvent: Decodable, Identifiable {
 
     var sourceLabel: String {
         switch source {
-        case "in_bar":  return "In bar"
-        case "shopify": return "Online order"
-        default:        return source.capitalized
+        case "in_bar":          return "In bar"
+        case "shopify":         return "Online order"
+        case "box_fraise":      return "box fraise"
+        case "stripe_webhook":  return "box fraise"
+        case "qr_stamp":        return "QR stamp"
+        case "nfc_tap":         return "NFC"
+        default:                return source.replacingOccurrences(of: "_", with: " ").capitalized
         }
     }
 }

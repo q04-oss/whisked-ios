@@ -32,6 +32,30 @@ final class AuthStore {
     // MARK: - Private
 
     private let service = AuthService()
+    private var pendingPushToken: String?
+    private var tokenObserver: NSObjectProtocol?
+
+    init() {
+        tokenObserver = NotificationCenter.default.addObserver(
+            forName: .apnsTokenReceived,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            guard let token = note.userInfo?["token"] as? String else { return }
+            Task { @MainActor in self?.handlePushToken(token) }
+        }
+    }
+
+    private func handlePushToken(_ token: String) {
+        pendingPushToken = token
+        guard isAuthenticated else { return }
+        Task { try? await service.registerPushToken(token) }
+    }
+
+    private func flushPushToken() {
+        guard let token = pendingPushToken else { return }
+        Task { try? await service.registerPushToken(token) }
+    }
 
     // MARK: - Lifecycle
 
@@ -44,6 +68,7 @@ final class AuthStore {
         do {
             let profile = try await service.fetchProfile()
             state = .authenticated(profile)
+            flushPushToken()
         } catch {
             // Tokens may be expired — fall through to login.
             state = .unauthenticated
@@ -57,6 +82,7 @@ final class AuthStore {
             _ = try await self.service.register(email: email, displayName: displayName, password: password)
             let profile = try await self.service.fetchProfile()
             self.state = .authenticated(profile)
+            self.flushPushToken()
         }
     }
 
@@ -65,6 +91,7 @@ final class AuthStore {
             _ = try await self.service.login(email: email, password: password)
             let profile = try await self.service.fetchProfile()
             self.state = .authenticated(profile)
+            self.flushPushToken()
         }
     }
 

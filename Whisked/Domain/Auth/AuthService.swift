@@ -37,6 +37,10 @@ struct AuthService {
         try await api.request(.me, as: CustomerProfile.self)
     }
 
+    func registerPushToken(_ token: String) async throws {
+        try await api.request(try .registerPushToken(token))
+    }
+
     var hasStoredTokens: Bool {
         (try? Keychain.loadProtected(key: Keychain.Key.accessToken)) != nil
     }

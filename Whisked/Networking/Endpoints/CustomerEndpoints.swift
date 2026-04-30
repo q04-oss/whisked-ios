@@ -17,4 +17,13 @@ extension Endpoint {
     static var deleteMe: Endpoint {
         Endpoint(method: .delete, path: "/v1/customers/me")
     }
+
+    static func registerPushToken(_ token: String) throws -> Endpoint {
+        struct Body: Encodable { let push_token: String }
+        return Endpoint(
+            method: .patch,
+            path: "/api/auth/push-token",
+            body: try JSONEncoder().encode(Body(push_token: token))
+        )
+    }
 }
