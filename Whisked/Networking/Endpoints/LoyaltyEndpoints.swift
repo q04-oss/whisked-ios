@@ -2,13 +2,13 @@ import Foundation
 
 extension Endpoint {
     static var loyaltyBalance: Endpoint {
-        Endpoint(method: .get, path: "/v1/loyalty/balance")
+        Endpoint(method: .get, path: "/api/businesses/\(Config.businessID)/loyalty")
     }
 
     static func loyaltyHistory(limit: Int = 20, offset: Int = 0) -> Endpoint {
         Endpoint(
             method: .get,
-            path: "/v1/loyalty/history",
+            path: "/api/businesses/\(Config.businessID)/loyalty/history",
             queryItems: [
                 URLQueryItem(name: "limit",  value: String(limit)),
                 URLQueryItem(name: "offset", value: String(offset)),
@@ -16,23 +16,7 @@ extension Endpoint {
         )
     }
 
-    static func stamp(locationID: Int? = nil, idempotencyKey: String) throws -> Endpoint {
-        struct Body: Encodable {
-            let location_id: Int?
-            let idempotency_key: String
-        }
-        return Endpoint(
-            method: .post,
-            path: "/v1/loyalty/stamp",
-            body: try JSONEncoder().encode(Body(location_id: locationID, idempotency_key: idempotencyKey))
-        )
-    }
-
-    static var redeem: Endpoint {
-        Endpoint(method: .post, path: "/v1/loyalty/redeem", body: Data("{}".utf8))
-    }
-
     static var qrToken: Endpoint {
-        Endpoint(method: .get, path: "/v1/loyalty/qr-token")
+        Endpoint(method: .get, path: "/api/businesses/\(Config.businessID)/loyalty/qr-token")
     }
 }

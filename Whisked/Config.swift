@@ -19,4 +19,13 @@ enum Config {
         else { fatalError("WHISKED_HMAC_KEY missing from Info.plist") }
         return key
     }()
+
+    /// The box fraise business ID this app is built for.
+    /// Every app in the network has its own ID baked in at build time.
+    static let businessID: Int = {
+        guard let raw = Bundle.main.infoDictionary?["WHISKED_BUSINESS_ID"] as? String,
+              let id  = Int(raw)
+        else { fatalError("WHISKED_BUSINESS_ID missing or invalid in Info.plist") }
+        return id
+    }()
 }

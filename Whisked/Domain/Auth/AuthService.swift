@@ -1,36 +1,31 @@
 import Foundation
 
-/// Handles registration, login, and logout. Persists tokens to the Keychain.
-/// Called by AuthStore — not directly from views.
 struct AuthService {
     private let api = APIClient.shared
 
-    func register(email: String, displayName: String, password: String) async throws -> TokenPair {
-        let pair = try await api.request(
+    func register(email: String, displayName: String, password: String) async throws -> AuthResponse {
+        let resp = try await api.request(
             try .register(email: email, displayName: displayName, password: password),
-            as: TokenPair.self
+            as: AuthResponse.self
         )
-        try persist(pair)
-        return pair
+        try persist(resp.token)
+        return resp
     }
 
-    func login(email: String, password: String) async throws -> TokenPair {
-        let pair = try await api.request(
+    func login(email: String, password: String) async throws -> AuthResponse {
+        let resp = try await api.request(
             try .login(email: email, password: password),
-            as: TokenPair.self
+            as: AuthResponse.self
         )
-        try persist(pair)
+        try persist(resp.token)
         try? Keychain.save(email, key: Keychain.Key.cachedEmail)
-        return pair
+        return resp
     }
 
     func logout() async {
-        let refreshToken = try? Keychain.loadProtected(key: Keychain.Key.refreshToken)
-        if let token = refreshToken {
-            try? await api.request(try .logout(refreshToken: token))
-        }
+        try? await api.request(.logout)
         Keychain.delete(key: Keychain.Key.accessToken)
-        Keychain.delete(key: Keychain.Key.refreshToken)
+        Keychain.delete(key: Keychain.Key.cachedEmail)
     }
 
     func fetchProfile() async throws -> CustomerProfile {
@@ -49,8 +44,7 @@ struct AuthService {
         Keychain.load(key: Keychain.Key.cachedEmail)
     }
 
-    private func persist(_ pair: TokenPair) throws {
-        try Keychain.saveProtected(pair.accessToken,  key: Keychain.Key.accessToken)
-        try Keychain.saveProtected(pair.refreshToken, key: Keychain.Key.refreshToken)
+    private func persist(_ token: String) throws {
+        try Keychain.saveProtected(token, key: Keychain.Key.accessToken)
     }
 }

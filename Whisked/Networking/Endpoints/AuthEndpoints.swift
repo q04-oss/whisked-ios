@@ -9,7 +9,7 @@ extension Endpoint {
         }
         return Endpoint(
             method: .post,
-            path: "/v1/auth/register",
+            path: "/api/auth/register",
             body: try JSONEncoder().encode(Body(email: email, display_name: displayName, password: password)),
             requiresAuth: false
         )
@@ -19,29 +19,13 @@ extension Endpoint {
         struct Body: Encodable { let email: String; let password: String }
         return Endpoint(
             method: .post,
-            path: "/v1/auth/login",
+            path: "/api/auth/login",
             body: try JSONEncoder().encode(Body(email: email, password: password)),
             requiresAuth: false
         )
     }
 
-    static func refresh(token: String) throws -> Endpoint {
-        struct Body: Encodable { let refresh_token: String }
-        return Endpoint(
-            method: .post,
-            path: "/v1/auth/refresh",
-            body: try JSONEncoder().encode(Body(refresh_token: token)),
-            requiresAuth: false
-        )
-    }
-
-    static func logout(refreshToken: String) throws -> Endpoint {
-        struct Body: Encodable { let refresh_token: String }
-        return Endpoint(
-            method: .post,
-            path: "/v1/auth/logout",
-            body: try JSONEncoder().encode(Body(refresh_token: refreshToken)),
-            requiresAuth: false
-        )
+    static var logout: Endpoint {
+        Endpoint(method: .post, path: "/api/auth/logout")
     }
 }

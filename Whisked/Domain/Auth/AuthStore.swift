@@ -79,10 +79,11 @@ final class AuthStore {
 
     func register(email: String, displayName: String, password: String) async {
         await perform {
-            _ = try await self.service.register(email: email, displayName: displayName, password: password)
+            let resp    = try await self.service.register(email: email, displayName: displayName, password: password)
             let profile = try await self.service.fetchProfile()
-            self.state = .authenticated(profile)
+            self.state  = .authenticated(profile)
             self.flushPushToken()
+            if resp.isNew { /* welcome flow hook if needed later */ }
         }
     }
 
@@ -90,7 +91,7 @@ final class AuthStore {
         await perform {
             _ = try await self.service.login(email: email, password: password)
             let profile = try await self.service.fetchProfile()
-            self.state = .authenticated(profile)
+            self.state  = .authenticated(profile)
             self.flushPushToken()
         }
     }

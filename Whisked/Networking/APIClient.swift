@@ -13,7 +13,7 @@ actor APIClient {
     static let shared = APIClient()
 
     private let session: URLSession
-    private var isRefreshing = false
+    private var isRefreshing = false  // reserved for future refresh endpoint
 
     private init() {
         let config = URLSessionConfiguration.default
@@ -49,14 +49,6 @@ actor APIClient {
 
         let (data, response) = try await execute(urlRequest)
         let http = response as! HTTPURLResponse
-
-        // On 401, try refreshing once then retry.
-        if http.statusCode == 401, !isRefreshing, endpoint.requiresAuth {
-            try await refreshTokens()
-            let retried = try buildRequest(endpoint)
-            let (retryData, retryResponse) = try await execute(retried)
-            return try validate(retryData, response: retryResponse as! HTTPURLResponse)
-        }
 
         return try validate(data, response: http)
     }
@@ -112,28 +104,6 @@ actor APIClient {
         let signature = mac.map { String(format: "%02x", $0) }.joined()
 
         return (timestamp, nonce, signature)
-    }
-
-    // MARK: - Token refresh
-
-    private func refreshTokens() async throws {
-        guard !isRefreshing else { return }
-        isRefreshing = true
-        defer { isRefreshing = false }
-
-        guard let refreshToken = try? Keychain.loadProtected(key: Keychain.Key.refreshToken) else {
-            throw APIError.unauthenticated
-        }
-
-        struct RefreshRequest: Encodable { let refresh_token: String }
-        struct RefreshResponse: Decodable { let access_token: String; let refresh_token: String }
-
-        let body     = try JSONEncoder().encode(RefreshRequest(refresh_token: refreshToken))
-        let endpoint = Endpoint(method: .post, path: "/v1/auth/refresh", body: body, requiresAuth: false)
-        let response = try await request(endpoint, as: RefreshResponse.self)
-
-        try Keychain.saveProtected(response.access_token, key: Keychain.Key.accessToken)
-        try Keychain.saveProtected(response.refresh_token, key: Keychain.Key.refreshToken)
     }
 
     // MARK: - Execution + validation
