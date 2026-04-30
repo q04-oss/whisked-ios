@@ -17,18 +17,11 @@ struct RootView: View {
         ZStack {
             WhiskedMapView()
                 .ignoresSafeArea()
-        }
-        .environment(router)
-        .sheet(isPresented: .constant(true)) {
-            SheetContainerView()
-                .presentationDetents([.height(88), .medium, .large], selection: $router.detent)
-                .presentationDragIndicator(.visible)
-                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-                .interactiveDismissDisabled()
-                .presentationCornerRadius(20)
-                .presentationBackground(.regularMaterial)
+
+            FluidSheetView()
                 .environment(router)
         }
+        .environment(router)
         .task { await auth.bootstrap() }
     }
 }

@@ -5,8 +5,9 @@
 // state here — rather than scattered across individual views — means the full
 // navigation state of the app is inspectable from one place.
 //
-// It also owns the sheet detent so that programmatic navigation (e.g. tapping
-// a map pin) can expand the sheet without the call site knowing about detents.
+// It also owns the sheet height fraction so that programmatic navigation
+// (e.g. tapping a map pin) can expand the sheet without the call site
+// knowing about snap points.
 import SwiftUI
 
 @Observable
@@ -15,15 +16,30 @@ final class SheetRouter {
 
     // MARK: - State
 
-    var route:  SheetRoute         = .home
-    var detent: PresentationDetent = .height(88)
+    var route:         SheetRoute = .home
+    /// Current resting height of the sheet as a fraction of screen height.
+    /// The gesture layer adds a live delta on top of this during drag.
+    /// Snap points: 0.08 (handle), 0.42 (list), 0.92 (full).
+    var sheetFraction: CGFloat    = 0.08
+
+    var isCollapsed: Bool { sheetFraction < 0.15 }
 
     // MARK: - Navigation
 
-    /// Navigates to a route and expands the sheet if it is collapsed.
+    /// Navigates to a route, expanding the sheet to an appropriate height.
     func navigate(to destination: SheetRoute) {
         withAnimation(.easeInOut(duration: 0.2)) { route = destination }
-        if detent == .height(88) { detent = .medium }
+        let target: CGFloat
+        switch destination {
+        case .home:              target = 0.42
+        case .location:         target = 0.55
+        case .loyalty:          target = 0.55
+        case .qrCode:           target = 0.92
+        case .profile:          target = 0.92
+        }
+        withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
+            sheetFraction = target
+        }
     }
 
     /// Parses a command string from the search bar and routes accordingly.

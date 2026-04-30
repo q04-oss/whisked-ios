@@ -26,7 +26,7 @@ struct SheetContainerView: View {
             .padding(.bottom, 12)
 
             // ── Content ────────────────────────────────────────────────────
-            if router.detent != .height(88) {
+            if !router.isCollapsed {
                 Divider().foregroundStyle(Color.whisked.beige)
                 sheetContent
                     .transition(.opacity)
