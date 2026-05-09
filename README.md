@@ -1,99 +1,125 @@
 # whisked-ios
 
-Swift iOS app for the Whisked loyalty program. Built with SwiftUI, Swift Concurrency, and HMAC-signed requests to the [whisked-platform](https://github.com/q04-oss/whisked-platform) backend.
+iOS client for **Whisked** — a matcha pickup app. Customers browse the menu, place an order, and pick it up at the bar. The pickup code (e.g. `W-4829`) is the artifact staff use to hand off the drink.
+
+The app is a Whisked-branded customer surface for the [box-fraise-platform](https://github.com/q04-oss/box-fraise-platform) backend. There is no separate Whisked-only backend — `WHISKED_API_BASE_URL` points at a box-fraise deployment.
+
+Built with **SwiftUI**, **Swift Concurrency**, **iOS 17 minimum**. Every API request is HMAC-SHA256 signed; tokens are stored in the biometric Keychain.
+
+---
+
+## MVP scope
+
+The four flows the v1 app supports:
+
+1. **Sign in** — email magic link via box-fraise-platform's `/api/auth/magic-link`. The link redirects to `whisked://auth?token=…`, which `WhiskedApp.swift::onOpenURL` captures and exchanges.
+2. **Browse menu** — list of drinks with name, description, and price. Tap `+` to add to cart. (Currently stubbed; real fetch lands when `GET /api/whisked/menu` ships server-side.)
+3. **Place order** — review cart, see total, hit "Place order". Server returns an order with status `pending`. (Currently stubbed; real call goes to `POST /api/whisked/orders`.)
+4. **Pickup** — Order tab shows live status (`pending → preparing → ready → collected`). Once `ready`, the pickup code displays in 64-pt rounded text. Status refreshes on app foreground and on `notification_type = "order_update"` silent push.
+
+What's deliberately **not** in v1: payments, order history, loyalty, location/map, popups, in-app menu management.
 
 ---
 
 ## Xcode setup (Mac required)
 
-All Swift source files are in `Whisked/`. The Xcode project is created on a Mac:
+The Xcode project is created on a Mac:
 
-1. **Open Xcode** → File → New → Project → iOS App
-2. Name: `Whisked`, Team: your Apple Developer team, Bundle ID: `ca.whisked.app`
-3. Language: Swift, Interface: SwiftUI, minimum deployment: iOS 17
-4. Save into this repo directory — Xcode creates `Whisked.xcodeproj`
-5. Delete the generated placeholder files (`ContentView.swift`, `WhiskedApp.swift`)
-6. In Xcode: File → Add Files → select the `Whisked/` folder — add all files
+1. Open Xcode → File → New → Project → iOS App
+2. Name `Whisked`, Bundle ID `ca.whisked.app`, Language Swift, Interface SwiftUI, minimum iOS 17
+3. Save into this repo directory
+4. Delete the generated placeholders (`ContentView.swift`, `WhiskedApp.swift`)
+5. File → Add Files → select the `Whisked/` folder
 
 ### Secrets
 
 ```bash
 cp Secrets.xcconfig.example Secrets.xcconfig
-# Edit Secrets.xcconfig with your values
+# Fill in your values
 ```
 
-Wire Secrets.xcconfig into the project:
-- Project → Info → Configurations → expand Debug and Release
-- Set both to `Secrets`
+```
+WHISKED_API_BASE_URL = https://<your-box-fraise>.up.railway.app
+WHISKED_HMAC_KEY     = <FRAISE_HMAC_SHARED_KEY from your box-fraise deployment>
+WHISKED_BUSINESS_ID  = <the business id this Whisked app instance is built for>
+```
 
-Add to `Info.plist`:
+Wire `Secrets.xcconfig` into the project: Project → Info → Configurations → set Debug + Release to `Secrets`.
+
+Add the variable bindings to `Info.plist`:
+
 ```xml
 <key>WHISKED_API_BASE_URL</key>
 <string>$(WHISKED_API_BASE_URL)</string>
 <key>WHISKED_HMAC_KEY</key>
 <string>$(WHISKED_HMAC_KEY)</string>
+<key>WHISKED_BUSINESS_ID</key>
+<string>$(WHISKED_BUSINESS_ID)</string>
 ```
 
 ---
 
-## Architecture
+## File layout
 
 ```
 Whisked/
-  WhiskedApp.swift              @main entry — injects stores into environment
-  Config.swift                  API base URL and HMAC key from Info.plist
-
-  Networking/
-    APIClient.swift             actor — HMAC-signed requests, JWT auth, token refresh
-    APIError.swift              typed errors
-    Keychain.swift              biometric-protected token storage
-    Endpoints/
-      AuthEndpoints.swift       register, login, refresh, logout
-      LoyaltyEndpoints.swift    balance, history, stamp, redeem
-      CustomerEndpoints.swift   me, updateMe, deleteMe
-
-  Domain/
-    Auth/
-      AuthModels.swift          TokenPair, CustomerProfile
-      AuthService.swift         network calls + Keychain persistence
-      AuthStore.swift           @Observable @MainActor — auth state machine
-    Loyalty/
-      LoyaltyModels.swift       LoyaltyBalance, LoyaltyEvent
-      LoyaltyService.swift      network calls
-      LoyaltyStore.swift        @Observable @MainActor — loyalty state
-
-  Views/
-    Root/RootView.swift         auth gate — switches on AuthStore.state
-    Auth/
-      LoginView.swift
-      RegisterView.swift
-    Main/MainTabView.swift      Steeps / History / Profile tabs
-    Loyalty/
-      BalanceView.swift         steep passport — progress ring, stamp, redeem
-      HistoryView.swift         loyalty event log
-    Profile/ProfileView.swift
-
-  Components/
-    SteepProgressView.swift     9-dot progress ring
-    PrimaryButton.swift         full-width button with loading state
-    CelebrationOverlay.swift    post-stamp animation
+├── WhiskedApp.swift                @main — three @Observable stores, deep-link handler
+├── AppDelegate.swift               push token registration, silent-push routing
+├── Config.swift                    Info.plist → typed runtime config
+│
+├── Networking/
+│   ├── APIClient.swift             actor — HMAC-SHA256 signing, JWT, token refresh
+│   ├── APIError.swift
+│   ├── Keychain.swift              biometric-protected storage
+│   └── Endpoints/
+│       ├── AuthEndpoints.swift     /api/auth/{login,register,logout,magic-link}
+│       ├── CustomerEndpoints.swift /api/auth/{me,display-name,push-token}
+│       └── Orders.swift            /api/whisked/{menu,orders,orders/:id,…}
+│
+├── Domain/
+│   ├── Auth/                       AuthModels, AuthService, AuthStore (state machine)
+│   └── Orders/                     OrderModels, OrderStore (cart + currentOrder)
+│
+├── Components/
+│   ├── PrimaryButton.swift         dark-fill CTA, max one per surface
+│   └── CelebrationOverlay.swift    bell-mark + haptic
+│
+├── Resources/
+│   └── WhiskedColors.swift         brand palette
+│
+└── Views/
+    ├── Root/RootView.swift         auth gate
+    ├── Auth/AuthView.swift         magic-link request + sent screens
+    ├── Main/MainTabView.swift      Menu / Cart / Order / Profile tabs
+    ├── Menu/MenuView.swift
+    ├── Cart/CartView.swift
+    ├── Orders/OrderStatusView.swift
+    └── Profile/ProfileView.swift
 ```
 
 ---
 
 ## Security
 
-- **HMAC-SHA256** — every request signed with `METHOD\nPATH\nTIMESTAMP\nNONCE\nBODY_HASH`
-- **UUID nonce** per request — replay prevention enforced server-side via Redis
-- **Biometric Keychain** — access and refresh tokens require Face ID / Touch ID
-- **Certificate pinning** — `PinningDelegate` placeholder in `APIClient.swift`; add production cert hash before shipping
-- **HMAC key injection** — never in source, injected at build time via `Secrets.xcconfig`
-- **Automatic token refresh** — 401 triggers one silent refresh attempt before surfacing the error
+- **HMAC-SHA256** on every request — `METHOD\nPATH\nTIMESTAMP\nNONCE\nBODY_SHA256_HEX` signed with `WHISKED_HMAC_KEY`. Server-side replay protection via Redis nonce dedup (see box-fraise-platform `server/src/http/middleware/hmac.rs`).
+- **UUID nonce** per request.
+- **Biometric Keychain** — JWT access token requires Face ID / Touch ID to read.
+- **Certificate pinning** — `PinningDelegate` in `APIClient.swift` is currently a stub. Wire the production cert hash before shipping (see TODO in source).
+- **HMAC key** never in source — injected at build time via `Secrets.xcconfig`.
 
 ---
 
-## Certificate pinning (before production)
+## Backend dependency
 
-1. Export the Railway server certificate: `openssl s_client -connect your-api.railway.app:443 | openssl x509 -pubkey -noout | openssl pkey -pubin -outform DER | openssl dgst -sha256 -binary | base64`
-2. Add the hash to `PinningDelegate` in `APIClient.swift`
-3. Bundle the `.cer` file in the Xcode project
+This app expects the following routes on box-fraise-platform:
+
+- `POST /api/auth/magic-link` — request a sign-in link
+- `POST /api/auth/magic-link/verify` — exchange a token for a JWT
+- `GET /api/auth/me` — current customer profile
+- `PATCH /api/auth/push-token` — register the APNs token
+- `GET /api/whisked/menu` — drink catalogue *(not yet implemented)*
+- `POST /api/whisked/orders` — place an order *(not yet implemented)*
+- `GET /api/whisked/orders/:id` — order status + pickup code *(not yet implemented)*
+- `GET /api/whisked/orders/:id/pickup-code` — explicit pickup-code endpoint *(not yet implemented)*
+
+The MVP runs against the menu / orders endpoints in **stub mode** until the server side lands — `OrderStore` returns hardcoded placeholders so the full UX renders end-to-end.

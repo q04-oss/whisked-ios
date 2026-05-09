@@ -6,8 +6,8 @@
 //     update pushes when a steep is credited.
 //
 //   didReceiveRemoteNotification — routes silent background pushes.
-//     The box fraise backend sends { notification_type: "loyalty_update" }
-//     when a steep fires; this causes LoyaltyStore to refresh immediately.
+//     The box-fraise backend sends { notification_type: "order_update" }
+//     when an order's status advances; this causes OrderStore to refresh immediately.
 import UIKit
 
 final class AppDelegate: NSObject, UIApplicationDelegate {

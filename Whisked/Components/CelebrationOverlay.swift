@@ -2,7 +2,7 @@
 //
 // A modal overlay with text is too loud for this brand — the confirmation
 // is a brief bell mark that appears centered in the sheet, fades out, and
-// triggers a haptic. The steep count update in LoyaltySheetView is the
+// triggers a haptic. The status update in OrderStatusView is the
 // real confirmation. This is the feeling, not the information.
 import SwiftUI
 

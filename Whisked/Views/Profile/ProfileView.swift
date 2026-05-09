@@ -1,3 +1,6 @@
+// ProfileView is the simplest possible account surface: email, display
+// name, and a sign-out button. Nothing else lives here yet — the MVP
+// doesn't yet expose order history or saved payment methods.
 import SwiftUI
 
 struct ProfileView: View {
@@ -8,53 +11,9 @@ struct ProfileView: View {
         NavigationStack {
             List {
                 if let profile = auth.profile {
-                    Section {
-                        HStack(spacing: 12) {
-                            Circle()
-                                .fill(Color.accentColor.opacity(0.15))
-                                .frame(width: 52, height: 52)
-                                .overlay {
-                                    Text(profile.displayName.prefix(1).uppercased())
-                                        .font(.title2.bold())
-                                        .foregroundStyle(.accent)
-                                }
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(profile.displayName.isEmpty ? "Whisked customer" : profile.displayName)
-                                    .font(.headline)
-                                Text(profile.email)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-                }
-
-                Section("About") {
-                    LabeledContent("Member since") {
-                        if let joined = auth.profile?.createdAt {
-                            Text(joined, style: .date)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    LabeledContent("Network") {
-                        Text("box fraise")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                if auth.profile?.verified == false {
-                    Section {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Label("Verify your email", systemImage: "envelope.badge")
-                                .font(.subheadline.weight(.medium))
-                            Text("Check your inbox to verify your account and unlock steeps across the box fraise network.")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                    } header: {
-                        Text("Action required")
+                    Section("Account") {
+                        LabeledContent("Email", value: profile.email)
+                        LabeledContent("Name", value: profile.displayName ?? "—")
                     }
                 }
 
@@ -66,9 +25,12 @@ struct ProfileView: View {
                     }
                 }
             }
-            .listStyle(.insetGrouped)
             .navigationTitle("Profile")
-            .confirmationDialog("Sign out?", isPresented: $showSignOutConfirmation, titleVisibility: .visible) {
+            .confirmationDialog(
+                "Sign out?",
+                isPresented: $showSignOutConfirmation,
+                titleVisibility: .visible
+            ) {
                 Button("Sign out", role: .destructive) {
                     Task { await auth.logout() }
                 }

@@ -1,32 +1,32 @@
+// Whisked iOS — customer-facing client for the box-fraise-platform backend.
+// `WHISKED_API_BASE_URL` (Secrets.xcconfig) must point at the box-fraise
+// deployment; the app does not talk to a separate Whisked-only backend.
 import SwiftUI
 import UserNotifications
 
 @main
 struct WhiskedApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @State private var authStore     = AuthStore()
-    @State private var loyaltyStore  = LoyaltyStore()
-    @State private var locationStore = LocationStore()
+    @State private var authStore  = AuthStore()
+    @State private var orderStore = OrderStore()
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(authStore)
-                .environment(loyaltyStore)
-                .environment(locationStore)
+                .environment(orderStore)
                 .task { await authStore.bootstrap() }
-                .tint(Color.whisked.amber)
-                // Refresh loyalty whenever the app returns to the foreground.
-                // Covers the case where the user bought something on the box fraise
-                // platform and switches back — the balance is always current.
+                // Refresh the in-flight order whenever the app comes back to
+                // the foreground so a "ready" status surfaces without forcing
+                // the user to pull-to-refresh.
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active, authStore.isAuthenticated {
-                        Task { await loyaltyStore.refreshBalance() }
+                        Task { await orderStore.refreshOrderStatus() }
                     }
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .loyaltyDidUpdate)) { _ in
-                    Task { await loyaltyStore.refreshBalance() }
+                .onReceive(NotificationCenter.default.publisher(for: .orderDidUpdate)) { _ in
+                    Task { await orderStore.refreshOrderStatus() }
                 }
                 .onOpenURL { url in
                     guard url.scheme == "whisked",
@@ -43,15 +43,16 @@ struct WhiskedApp: App {
 // MARK: - Push notification entry point
 
 /// Called by AppDelegate (or the SwiftUI scene delegate) when a remote
-/// notification arrives. The box fraise backend sends a silent push with
-/// notification_type = "loyalty_update" when a steep is credited to this user.
-/// Posting .loyaltyDidUpdate causes any live LoyaltyStore to refresh immediately.
+/// notification arrives. The box-fraise backend sends a silent push with
+/// notification_type = "order_update" when an order's status advances
+/// (pending → preparing → ready). Posting `.orderDidUpdate` causes any live
+/// `OrderStore` to refresh immediately.
 func handleRemoteNotification(_ userInfo: [AnyHashable: Any]) {
-    guard userInfo["notification_type"] as? String == "loyalty_update" else { return }
-    NotificationCenter.default.post(name: .loyaltyDidUpdate, object: nil)
+    guard userInfo["notification_type"] as? String == "order_update" else { return }
+    NotificationCenter.default.post(name: .orderDidUpdate, object: nil)
 }
 
 extension Notification.Name {
-    static let loyaltyDidUpdate  = Notification.Name("loyaltyDidUpdate")
+    static let orderDidUpdate    = Notification.Name("orderDidUpdate")
     static let apnsTokenReceived = Notification.Name("apnsTokenReceived")
 }

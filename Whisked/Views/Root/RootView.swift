@@ -1,27 +1,28 @@
-// RootView is the single scene root.
-//
-// The map fills the entire screen at all times — there is no navigation stack,
-// no tab bar, no splash screen after the first launch. The persistent sheet
-// floats above the map and is never dismissible. Auth, loyalty, and location
-// detail all surface through the sheet rather than as separate screens.
-//
-// SheetRouter is created here and injected into the environment so any
-// descendant can trigger navigation without prop drilling.
+// RootView is the single auth gate. The `.checking` state shows a spinner
+// while AuthStore.bootstrap restores tokens; on `.unauthenticated` /
+// `.awaitingMagicLink` we show the magic-link AuthView; on `.authenticated`
+// we show the four-tab MainTabView.
 import SwiftUI
 
 struct RootView: View {
     @Environment(AuthStore.self) private var auth
-    @State private var router = SheetRouter()
 
     var body: some View {
-        ZStack {
-            WhiskedMapView()
-                .ignoresSafeArea()
+        switch auth.state {
+        case .checking:
+            VStack {
+                ProgressView()
+                    .controlSize(.large)
+                    .tint(Color.whisked.amber)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.whisked.cream.ignoresSafeArea())
 
-            FluidSheetView()
-                .environment(router)
+        case .unauthenticated, .awaitingMagicLink:
+            AuthView()
+
+        case .authenticated:
+            MainTabView()
         }
-        .environment(router)
-        .task { await auth.bootstrap() }
     }
 }
