@@ -1,9 +1,8 @@
 // MenuView lists every drink the bar serves. Tapping the + button adds a
 // drink to the cart; the cart total updates live in the Cart tab.
 //
-// The menu source is OrderStore, which currently returns a hardcoded set
-// (see MenuItem.placeholders). Real fetch lands when GET /api/whisked/menu
-// ships on box-fraise-platform.
+// Menu source is the box-fraise-platform endpoint `GET /api/whisked/menu`,
+// fetched via OrderStore on first appearance.
 import SwiftUI
 
 struct MenuView: View {
@@ -12,9 +11,20 @@ struct MenuView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if store.menu.isEmpty {
+                if store.isLoading && store.menu.isEmpty {
                     ContentUnavailableView(
-                        "Loading menu",
+                        "Loading menu…",
+                        systemImage: "list.bullet.rectangle"
+                    )
+                } else if let error = store.error, store.menu.isEmpty {
+                    ContentUnavailableView(
+                        "Couldn't load menu",
+                        systemImage: "exclamationmark.triangle",
+                        description: Text(error)
+                    )
+                } else if store.menu.isEmpty {
+                    ContentUnavailableView(
+                        "Menu is empty",
                         systemImage: "list.bullet.rectangle"
                     )
                 } else {
@@ -25,6 +35,7 @@ struct MenuView: View {
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
                     .background(Color.whisked.cream)
+                    .refreshable { await store.fetchMenu() }
                 }
             }
             .navigationTitle("Menu")
@@ -36,7 +47,7 @@ struct MenuView: View {
 // MARK: - Row
 
 private struct MenuRow: View {
-    let item: MenuItem
+    let item: WhiskedMenuItemRow
     let onAdd: () -> Void
 
     var body: some View {
@@ -62,6 +73,8 @@ private struct MenuRow: View {
                     .foregroundStyle(Color.whisked.amber)
             }
             .buttonStyle(.plain)
+            .disabled(!item.available)
+            .opacity(item.available ? 1 : 0.4)
         }
         .padding(.vertical, 6)
     }

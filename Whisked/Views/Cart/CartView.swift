@@ -32,12 +32,21 @@ struct CartView: View {
                             HStack {
                                 Text("Total").font(.headline)
                                 Spacer()
-                                Text(store.cartTotal, format: .currency(code: "CAD"))
+                                Text(
+                                    Decimal(store.cartTotalCents) / 100,
+                                    format: .currency(code: "CAD")
+                                )
                                     .font(.headline)
                             }
 
+                            if let error = store.error {
+                                Text(error)
+                                    .font(.footnote)
+                                    .foregroundStyle(.red)
+                            }
+
                             PrimaryButton(title: "Place order", isLoading: store.isPlacing) {
-                                await store.placeOrder()
+                                await store.placeOrder(businessId: Config.businessID)
                             }
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                         }
@@ -57,7 +66,7 @@ private struct CartRow: View {
     var body: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.menuItem.name)
+                Text(item.name)
                     .foregroundStyle(Color.whisked.ink)
                 Text("Qty \(item.quantity)")
                     .font(.caption)
