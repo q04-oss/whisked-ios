@@ -30,6 +30,7 @@ The Xcode project is created on a Mac:
 3. Save into this repo directory
 4. Delete the generated placeholders (`ContentView.swift`, `WhiskedApp.swift`)
 5. File → Add Files → select the `Whisked/` folder
+6. File → Add Package Dependencies → `https://github.com/stripe/stripe-ios` — add the **StripePaymentSheet** product to the Whisked target. `Package.swift` at the repo root documents the same dep so tooling can read it.
 
 ### Secrets
 
@@ -39,9 +40,10 @@ cp Secrets.xcconfig.example Secrets.xcconfig
 ```
 
 ```
-WHISKED_API_BASE_URL = https://<your-box-fraise>.up.railway.app
-WHISKED_HMAC_KEY     = <FRAISE_HMAC_SHARED_KEY from your box-fraise deployment>
-WHISKED_BUSINESS_ID  = <the business id this Whisked app instance is built for>
+WHISKED_API_BASE_URL   = https://<your-box-fraise>.up.railway.app
+WHISKED_HMAC_KEY       = <FRAISE_HMAC_SHARED_KEY from your box-fraise deployment>
+WHISKED_BUSINESS_ID    = <the business id this Whisked app instance is built for>
+STRIPE_PUBLISHABLE_KEY = pk_test_…  (or pk_live_… for production)
 ```
 
 Wire `Secrets.xcconfig` into the project: Project → Info → Configurations → set Debug + Release to `Secrets`.
@@ -55,7 +57,23 @@ Add the variable bindings to `Info.plist`:
 <string>$(WHISKED_HMAC_KEY)</string>
 <key>WHISKED_BUSINESS_ID</key>
 <string>$(WHISKED_BUSINESS_ID)</string>
+<key>STRIPE_PUBLISHABLE_KEY</key>
+<string>$(STRIPE_PUBLISHABLE_KEY)</string>
 ```
+
+### Stripe setup
+
+1. Add the `StripePaymentSheet` product via SPM in Xcode (Xcode setup step 6 above).
+2. Set `STRIPE_PUBLISHABLE_KEY` in `Secrets.xcconfig` and bind it in `Info.plist`.
+3. Grab your publishable key from [dashboard.stripe.com/apikeys](https://dashboard.stripe.com/apikeys) — `pk_test_…` for development, `pk_live_…` for production. The matching **secret** key (`sk_…`) lives only on the box-fraise-platform server and is never bundled in the app.
+
+The payment flow:
+1. Customer taps **Place Order** → `OrderStore.placeOrder` POSTs `/api/whisked/orders`
+2. Server mints a Stripe `PaymentIntent`, returns its `client_secret`
+3. `OrderStore.preparePaymentSheet` builds a Stripe `PaymentSheet` and flips `awaitingPayment = true`
+4. `CartView` presents the Stripe-native sheet (Apple Pay, card, link)
+5. On `.completed` → `OrderStatusView` opens automatically and starts 5s polling for `preparing → ready`
+6. On `.canceled` / `.failed` → `currentOrder` drops; cart is empty; customer can re-place
 
 ---
 

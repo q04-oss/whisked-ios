@@ -28,4 +28,15 @@ enum Config {
         else { fatalError("WHISKED_BUSINESS_ID missing or invalid in Info.plist") }
         return id
     }()
+
+    /// Stripe **publishable** key — safe to ship in the client binary, used
+    /// only to talk to Stripe's frontend SDK and obtain confirmable
+    /// PaymentIntents. The secret key never leaves the box-fraise server.
+    /// Use `pk_test_…` in dev and `pk_live_…` in production builds.
+    static let stripePublishableKey: String = {
+        guard let key = Bundle.main.infoDictionary?["STRIPE_PUBLISHABLE_KEY"] as? String,
+              !key.isEmpty
+        else { fatalError("STRIPE_PUBLISHABLE_KEY must be set in Info.plist") }
+        return key
+    }()
 }

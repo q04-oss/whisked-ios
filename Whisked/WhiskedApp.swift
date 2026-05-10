@@ -1,8 +1,12 @@
 // Whisked iOS — customer-facing client for the box-fraise-platform backend.
 // `WHISKED_API_BASE_URL` (Secrets.xcconfig) must point at the box-fraise
 // deployment; the app does not talk to a separate Whisked-only backend.
+//
+// Requires the StripePaymentSheet SPM dependency — added via Xcode (see
+// Package.swift and the README "Stripe setup" section).
 import SwiftUI
 import UserNotifications
+import StripePaymentSheet
 
 @main
 struct WhiskedApp: App {
@@ -10,6 +14,13 @@ struct WhiskedApp: App {
     @State private var authStore  = AuthStore()
     @State private var orderStore = OrderStore()
     @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        // Configure the Stripe SDK with the publishable key once, at App
+        // construction. Stripe stores this globally on `StripeAPI`, so
+        // subsequent PaymentSheet inits pick it up automatically.
+        StripeAPI.defaultPublishableKey = Config.stripePublishableKey
+    }
 
     var body: some Scene {
         WindowGroup {
