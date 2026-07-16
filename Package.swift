@@ -19,7 +19,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/stripe/stripe-ios",
-            from: "23.0.0"
+            from: "26.3.0"
         ),
     ],
     targets: [
